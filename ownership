@@ -1,0 +1,124 @@
+/**
+ *Submitted for verification at BscScan.com on 2022-03-21
+*/
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.10;
+
+interface BEP20 {
+
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address recipient, uint256 amount) external returns (bool);
+    
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    
+}
+
+abstract contract Context {
+    function _msgSender() internal view virtual returns (address) {
+        return msg.sender;
+    }
+    function _msgData() internal view virtual returns (bytes calldata) {
+        this;
+        return msg.data;
+    }
+}
+
+contract Wider is BEP20 ,Context {
+
+    string private   constant name = "Wider"; 
+    string private   constant symbol = "WD";
+    uint8  private  constant decimals = 0;
+   
+    mapping(address => uint256) balances;
+    mapping(address => mapping (address => uint256)) allowed;
+    address public _owner;
+    uint private   totalSupply_=1000;
+    using SafeMath for uint256;
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+     constructor() public 
+      {
+        balances[msg.sender] = totalSupply_;
+        _owner=msg.sender;
+        emit OwnershipTransferred(address(0), _msgSender());
+    }
+     event burn(address _owner , uint _value);
+        
+ function renounceOwnership() public virtual onlyOwner {
+        emit OwnershipTransferred(_owner, address(0));
+        _owner = address(0);
+    }
+
+     function transferOwnership(address newOwner) public virtual onlyOwner {
+        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        emit OwnershipTransferred(_owner, newOwner);
+        _owner = newOwner;
+    }
+
+    function totalSupply() public override view returns (uint256) {
+    return totalSupply_;
+    }
+
+    function balanceOf(address tokenOwner) public override view returns (uint256) {
+        return balances[tokenOwner];
+    }
+
+    function transfer(address receiver, uint256 numTokens) public override returns (bool) {
+        require(numTokens <= balances[msg.sender]);
+        balances[msg.sender] = balances[msg.sender].sub(numTokens);
+        balances[receiver] = balances[receiver].add(numTokens);
+        emit Transfer(msg.sender, receiver, numTokens);
+        return true;
+    }
+
+ 
+    modifier onlyOwner() {
+        require(_owner == _msgSender(), "Ownable: caller is not the owner");
+        _;
+    }
+
+
+
+
+
+ 
+ 
+
+
+    function _mintToken(uint _value) public  returns(bool)
+    {
+
+        require(msg.sender==_owner,"only admin has this access");
+        totalSupply_+=_value;
+        balances[_owner]+=_value;
+        return true;
+
+    }
+
+     function _burnToken(uint _value) public   returns(bool)
+    {
+
+       require(msg.sender==_owner,"only admin has this access");
+        totalSupply_-=_value;
+        balances[_owner]-=_value;
+        emit burn(msg.sender, _value);
+        return true;
+    }
+}
+
+library SafeMath {
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+      assert(b <= a);
+      return a - b;
+    }
+
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+      uint256 c = a + b;
+      assert(c >= a);
+      return c;
+    }
+}
